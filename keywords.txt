@@ -1,0 +1,24 @@
+WiiClassicControl	KEYWORD1
+
+CollectData	KEYWORD2
+leftShoulderPressed	KEYWORD2
+rightShoulderPressed	KEYWORD2
+lzPressed	KEYWORD2
+rzPressed	KEYWORD2
+leftDPressed	KEYWORD2
+rightDPressed	KEYWORD2
+upDPressed	KEYWORD2
+downDPressed	KEYWORD2
+selectPressed	KEYWORD2
+startPressed	KEYWORD2
+homePressed	KEYWORD2
+xPressed	KEYWORD2
+yPressed	KEYWORD2
+aPressed	KEYWORD2
+bPressed	KEYWORD2
+leftStickX	KEYWORD2
+leftStickY	KEYWORD2
+rightStickX	KEYWORD2
+rightStickY	KEYWORD2
+SetLeftStick_Factors	KEYWORD2
+SetRightStick_Factors	KEYWORD2
