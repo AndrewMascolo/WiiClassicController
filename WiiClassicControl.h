@@ -20,6 +20,8 @@ Version 1.02:
     SetRightStick_Factors(byte, byte)
     These multiply the returned values from the joysticks. 1: Lowest(0 - 31 range) to 8: Highest(0 - 248 range)
 
+Version 1.03:
+  Fixed bug with getting the button pressed and .Begin() function.
 */
 #define ON 0x1
 #define OFF 0x0
