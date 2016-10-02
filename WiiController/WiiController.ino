@@ -9,15 +9,11 @@
   to the controller if it is powered by 5 volts. What I have done here is allowed the user to use pin A2 as ground, by setting the pin to LOW, and making pin A3 an input
   so the user can have a jumper to the 3.3V pin without harming the Arduino.
   
-  **.begin(Vcc, Gnd, baud rate)**
-  Vcc: Set to TRUE if you have the adapter in the pin A3 and are using a jumper to 3.3V pin.
-  Vcc: Set to FALSE if you are using your own wires and are not using pin A3 for power.
+  **.begin(Vcc, Gnd)**
+  Vcc: Set to ON if you are using the adapter AND the Arduino board you are using outputs 3.3V. (Like a Pro Micro or DUE)
+  Vcc: Set to NEUTRAL if you are using your own wires and are not using pin A3 for power. (pin will be set to INPUT)
   
-  Gnd: Set to TRUE if you have the adapter in the pin A2, this will automatically set pin A2 to LOW.
-  Gnd: Set to FALSE if you are using your own wires and are not using pin A2 for ground.
-  
-  Baud rate: Set USE_MONITOR in the .h file to TRUE to use the serial.print functions to see their data.
-  
+  Gnd: Set to OFF if you have the adapter in the pin A2, this will automatically set pin A2 to LOW. Otherwise leave empty, default is OFF
 */ 
 
 #include<WiiClassicControl.h>
@@ -27,7 +23,7 @@ WiiClassicControl Wii;
 
 void setup()
 {
-  Wii.begin(true, true); // SEE ABOVE
+  Wii.begin(NEUTRAL, OFF); // SEE ABOVE
   Serial.begin(115200);
   pinMode(13, OUTPUT);
 }

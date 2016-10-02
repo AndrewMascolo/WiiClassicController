@@ -1,7 +1,7 @@
 #ifndef WiiClassicControl_h
 #define WiiClassicControl_h
 /*
-  Creator: Andrew Mascolo 
+  Creator: Andrew Mascolo
   This library is a fixed version of the original library created by Tim Hirzel.
 */
 
@@ -13,16 +13,24 @@
 Version 1.01:
   Fixed button defines for X, Y, A and B.
   They were causing errors with my other sketches and libraries.
-  
+
 Version 1.02:
   Added two new functions:
     SetLeftStick_Factors(byte, byte)
     SetRightStick_Factors(byte, byte)
     These multiply the returned values from the joysticks. 1: Lowest(0 - 31 range) to 8: Highest(0 - 248 range)
-  
-*/
 
-#define USE_MONITOR false
+*/
+#define ON 0x1
+#define OFF 0x0
+#define NEUTRAL 0x2
+
+
+#define _off(x) do{ pinMode(x, OUTPUT); digitalWrite(x, LOW); }while(0)
+#define _on(x) do{ pinMode(x, OUTPUT); digitalWrite(x, HIGH); }while(0)
+#define _neutral(x) do{ pinMode(x, INPUT); }while(0)
+
+#define USE_MONITOR 0
 
 /* BYTE 5*/
 #define UD 0x01
@@ -46,178 +54,178 @@ Version 1.02:
 class WiiClassicControl
 {
   public:
-    void begin(bool Vcc, bool Gnd)
-	{
-	    if(Vcc)
-			pinMode(A3, INPUT);
-		if(Gnd)
+    void begin(byte Vcc = NEUTRAL, byte Gnd = NEUTRAL)
+    {
+      for (byte i = 0; i < 6; i++)
+        data[i] = 0x00;
+
+      Wire.begin();
+      Wire.beginTransmission(0x52);      // transmit to device @ BBAddress 0x52
+      Wire.write((byte)0x40);           // write memory address
+      Wire.write((byte)0x00);           // write memory address
+      Wire.endTransmission();
+
+      SetLeftStick_Factors(8, 8);
+      SetRightStick_Factors(8, 8);
+	  
+	  switch (Vcc)
+      {
+        case ON: _on(A3); break;
+        case NEUTRAL: _neutral(A3); break;
+        default: break;
+      }
+	  
+      switch (Gnd)
+      {
+        case OFF: _off(A2); break;
+        default: break;
+      }
+    }
+
+    void RawData()
+    {
+      Wire.requestFrom (0x52, 6); // request data from controller
+      if (Wire.available ())
+      {
+        for (count = 0; count < 6; count++)
         {
-			pinMode(A2, OUTPUT);
-			digitalWrite(A2, LOW);
-		}
-		
-		Wire.begin();
-		Wire.beginTransmission(0x52);      // transmit to device @ BBAddress 0x52
-		Wire.write(0x40);           // write memory address
-		Wire.write(0x00);           // write memory address
-		Wire.endTransmission();
-		count = 0;
-		
-		for(byte i = 0; i < 6; i++)
-		    data[i] = 0x00;
-		
-		SetLeftStick_Factors(8, 8);
-		SetRightStick_Factors(8, 8);
-		
-		time = millis();
-	}
-	
-	#if USE_MONITOR
-	void RawData()
-	{
-		Wire.requestFrom (0x52, 6); // request data from controller
-		if(Wire.available ()) 
-		{
-			for(count = 0; count < 6; count++)
-			{
-				Serial.print(Wire.read(), BIN);
-				Serial.print("|");
-			}
-			Serial.println();
-			Zero();	
-		}
-	}
-	#endif
-	
-	void CollectData()
-	{
-	    Wire.requestFrom (0x52, 6); // request data from controller
-		if(Wire.available ()) 
-		{
-		    for(count = 0; count < 6; count++)
-				data[count] = Wire.read();
-			Zero();
-		}
-	}
-	
-	void SetLeftStick_Factors(byte lx, byte ly)
-	{
-	  LX = ((lx < 1)? 1 : ((lx > 8)? 8 : lx));
-	  LY = ((ly < 1)? 1 : ((ly > 8)? 8 : ly));
-	}
-	
-	void SetRightStick_Factors(byte rx, byte ry)
-	{
-	  RX = ((rx < 1)? 1 : ((rx > 8)? 8 : rx));
-	  RY = ((ry < 1)? 1 : ((ry > 8)? 8 : ry));
-	}
-	
-	boolean leftShoulderPressed() {
-		 return GetButton(4,LB);
-	}
+          Serial.print(Wire.read(), BIN);
+          Serial.print("|");
+        }
+        Serial.println();
+        Zero();
+      }
+    }
 
-	boolean rightShoulderPressed() {
-		 return GetButton(4,RB);
-	 }
+    void CollectData()
+    {
+      count = 0;
+      Wire.requestFrom (0x52, 6); // request data from controller
+      while (Wire.available ())
+      {
+        data[count] = Wire.read();
+        count++;
+      }
+      Zero();
+    }
 
-	boolean lzPressed() {
-		 return GetButton(5,ZL);
-	 }
+    void SetLeftStick_Factors(byte lx, byte ly)
+    {
+      LX = ((lx < 1) ? 1 : ((lx > 8) ? 8 : lx));
+      LY = ((ly < 1) ? 1 : ((ly > 8) ? 8 : ly));
+    }
 
-	boolean rzPressed() {
-		 return GetButton(5,ZR);
-	 }
+    void SetRightStick_Factors(byte rx, byte ry)
+    {
+      RX = ((rx < 1) ? 1 : ((rx > 8) ? 8 : rx));
+      RY = ((ry < 1) ? 1 : ((ry > 8) ? 8 : ry));
+    }
 
-	boolean leftDPressed() {
-		 return GetButton(5,LD);
-	 }
+    boolean leftShoulderPressed() {
+      return GetButton(4, LB);
+    }
 
-	boolean rightDPressed() {
-		 return GetButton(4,RD);
-	 }
+    boolean rightShoulderPressed() {
+      return GetButton(4, RB);
+    }
 
-	boolean upDPressed() {
-		 return GetButton(5,UD);
-	 }
+    boolean lzPressed() {
+      return GetButton(5, ZL);
+    }
 
-	boolean downDPressed() {
-		 return GetButton(4,DD);
-	 }
+    boolean rzPressed() {
+      return GetButton(5, ZR);
+    }
 
-	boolean selectPressed() {
-		 return GetButton(4,SELECT);
-	 }
+    boolean leftDPressed() {
+      return GetButton(5, LD);
+    }
 
-	boolean homePressed() {
-		 return GetButton(4,HOME);
-	 }
+    boolean rightDPressed() {
+      return GetButton(4, RD);
+    }
 
-	boolean startPressed() {
-		 return GetButton(4,START);
-	 }
+    boolean upDPressed() {
+      return GetButton(5, UD);
+    }
 
-	boolean xPressed() {
-		 return GetButton(5,BX);
-	 }
+    boolean downDPressed() {
+      return GetButton(4, DD);
+    }
 
-	boolean yPressed() {
-		 return GetButton(5,BY);
-	 }
+    boolean selectPressed() {
+      return GetButton(4, SELECT);
+    }
 
-	boolean aPressed() {
-		 return GetButton(5,BA);
-	 }
+    boolean homePressed() {
+      return GetButton(4, HOME);
+    }
 
-	boolean bPressed() {
-		 return GetButton(5,BB);
-	 }
+    boolean startPressed() {
+      return GetButton(4, START);
+    }
 
-	byte leftStickX() {
-		 return  (GetStick(0, 0x3F)>>1)*LX;
-	}
+    boolean xPressed() {
+      return GetButton(5, BX);
+    }
 
-	byte leftStickY() {
-		 return  (GetStick(1, 0x3F)>>1)*LY;       
-	}
+    boolean yPressed() {
+      return GetButton(5, BY);
+    }
 
-	byte rightStickX() {
-		 return ((GetStick(0, 0xC0)>>3) | (GetStick(1, 0xC0)>>5) | (GetStick(2, 0xC0)>>7))*RX;
-	}
+    boolean aPressed() {
+      return GetButton(5, BA);
+    }
 
-	byte rightStickY() {
-		 return GetStick(2, 0x3F)*RY; 
-	}
-	
-	#if USE_MONITOR
-	void ShowData(byte col)
-	{
-		Serial.print(data[col],BIN);
-		Serial.print(" | ");
-	}
-    #endif
-	
-	private:
-	
-		boolean GetButton(byte col, byte D) 
-		{
-			return (!data[col] & D);            
-		}
-	    
-		int GetStick(byte col, byte mask) 
-		{
-			return (data[col] & mask);            
-		}
-		
-		void Zero()
-		{
-			Wire.beginTransmission(0x52);   // transmit to device 0x52
-			Wire.write(0x00);           	// writes one byte
-			Wire.endTransmission();    		// stop transmitting
-		} 
-	
-		int 	count;
-		byte 	data[6];
-		long 	time;
-		byte 	RX,RY,LX,LY;
+    boolean bPressed() {
+      return GetButton(5, BB);
+    }
+
+    byte leftStickX() {
+      return  (GetStick(0, 0x3F) >> 1) * LX;
+    }
+
+    byte leftStickY() {
+      return  (GetStick(1, 0x3F) >> 1) * LY;
+    }
+
+    byte rightStickX() {
+      return ((GetStick(0, 0xC0) >> 3) | (GetStick(1, 0xC0) >> 5) | (GetStick(2, 0xC0) >> 7)) * RX;
+    }
+
+    byte rightStickY() {
+      return GetStick(2, 0x3F) * RY;
+    }
+
+#if USE_MONITOR
+    void ShowData(byte col)
+    {
+      Serial.print(data[col], BIN);
+      Serial.print(" | ");
+    }
+#endif
+
+  private:
+
+    boolean GetButton(byte col, byte D)
+    {
+      return (~data[col] & D);
+    }
+
+    int GetStick(byte col, byte mask)
+    {
+      return (data[col] & mask);
+    }
+
+    void Zero()
+    {
+      Wire.beginTransmission(0x52);   // transmit to device 0x52
+      Wire.write((byte)0x00);           	// writes one byte
+      Wire.endTransmission();    		// stop transmitting
+    }
+
+    byte 	count;
+    byte 	data[6];
+    byte 	RX, RY, LX, LY;
 };
 #endif
