@@ -56,16 +56,17 @@ Version 1.03:
 class WiiClassicControl
 {
   public:
-    void begin(byte Vcc = NEUTRAL, byte Gnd = NEUTRAL)
+    void begin(byte Vcc = NEUTRAL, byte Gnd = NEUTRAL, TwoWire &theWire = Wire)
     {
       for (byte i = 0; i < 6; i++)
         data[i] = 0x00;
 
-      Wire.begin();
-      Wire.beginTransmission(0x52);      // transmit to device @ BBAddress 0x52
-      Wire.write((byte)0x40);           // write memory address
-      Wire.write((byte)0x00);           // write memory address
-      Wire.endTransmission();
+	  WIRE = &theWire;
+      WIRE -> begin();
+      WIRE -> beginTransmission(0x52);      // transmit to device @ BBAddress 0x52
+      WIRE -> write((byte)0x40);           // write memory address
+      WIRE -> write((byte)0x00);           // write memory address
+      WIRE -> endTransmission();
 
       SetLeftStick_Factors(8, 8);
       SetRightStick_Factors(8, 8);
@@ -86,12 +87,12 @@ class WiiClassicControl
 
     void RawData()
     {
-      Wire.requestFrom (0x52, 6); // request data from controller
-      if (Wire.available ())
+      WIRE -> requestFrom (0x52, 6); // request data from controller
+      if (WIRE -> available ())
       {
         for (count = 0; count < 6; count++)
         {
-          Serial.print(Wire.read(), BIN);
+          Serial.print(WIRE -> read(), BIN);
           Serial.print("|");
         }
         Serial.println();
@@ -102,10 +103,10 @@ class WiiClassicControl
     void CollectData()
     {
       count = 0;
-      Wire.requestFrom (0x52, 6); // request data from controller
-      while (Wire.available ())
+      WIRE -> requestFrom (0x52, 6); // request data from controller
+      while (WIRE -> available ())
       {
-        data[count] = Wire.read();
+        data[count] = WIRE -> read();
         count++;
       }
       Zero();
@@ -221,13 +222,14 @@ class WiiClassicControl
 
     void Zero()
     {
-      Wire.beginTransmission(0x52);   // transmit to device 0x52
-      Wire.write((byte)0x00);           	// writes one byte
-      Wire.endTransmission();    		// stop transmitting
+      WIRE -> beginTransmission(0x52);   // transmit to device 0x52
+      WIRE -> write((byte)0x00);           	// writes one byte
+      WIRE -> endTransmission();    		// stop transmitting
     }
 
     byte 	count;
     byte 	data[6];
     byte 	RX, RY, LX, LY;
+	TwoWire *WIRE;
 };
 #endif
